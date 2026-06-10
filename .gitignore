@@ -11,7 +11,7 @@ build/
 *.so
 .venv/
 venv/
-env/
+/env/
 
 # Jupyter Notebook
 .ipynb_checkpoints/
@@ -27,7 +27,7 @@ env/
 *.npz
 data/raw/
 data/processed/
-logs/
+/logs/
 runs/
 wandb/
 mlruns/
