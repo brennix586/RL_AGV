@@ -1,0 +1,21 @@
+{
+  "seeds": [
+    0,
+    1,
+    42,
+    123,
+    777
+  ],
+  "baseline": {
+    "avg_reward_final": -20.527,
+    "std_reward_final": 106.70710974906969,
+    "total_dead": 471,
+    "dead_rate_final": 2.0
+  },
+  "proposed": {
+    "avg_reward_final": 127.297,
+    "std_reward_final": 47.49158652856314,
+    "total_dead": 415,
+    "dead_rate_final": 0.6
+  }
+}

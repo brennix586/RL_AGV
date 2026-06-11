@@ -1,0 +1,11 @@
+{
+  "name": "agv-report",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "report": "node make_report.js"
+  },
+  "dependencies": {
+    "pptxgenjs": "^3.12.0"
+  }
+}
