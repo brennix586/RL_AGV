@@ -5,7 +5,7 @@
 // 작성일   : 2026.06.
 // 실행방법 : node make_report.js  (src/report/ 디렉토리에서)
 //            또는: npm run report
-// 슬라이드 : 총 12장 (LG 컨셉 디자인 — 검정 헤더, 흰 배경, 색상 최소화)
+// 슬라이드 : 총 15장 (LG 컨셉 디자인 — 검정 헤더, 흰 배경, 색상 최소화)
 // =============================================================================
 
 "use strict";
@@ -133,23 +133,25 @@ function slide02_toc(pptx) {
   addHeader(slide, pptx, "목차");
 
   const items = [
-    "01  프로젝트 주제 및 목표",
-    "02  환경 설명 — 7×7 GridWorld · State / Action / Reward",
-    "03  Reward Shaping 설계 (Safety-Aware)",
-    "04  소스코드 비교 — Baseline vs Proposed",
-    "05  알고리즘 및 하이퍼파라미터",
-    "06  실험 셋업",
-    "07  실험 결과 ① — 학습 곡선 · 방전 횟수",
-    "08  실험 결과 ② — 최종 성능 비교 테이블",
-    "09  실험 조건 최적화 과정 — Step 0→5 수정 이력",
-    "10  토의 — Safe RL 관점 해석",
-    "11  결론 및 향후 연구",
+    { text: "01  프로젝트 주제 및 목표",                                   indent: 0 },
+    { text: "02  환경 설명 — 7×7 GridWorld · State / Action / Reward",    indent: 0 },
+    { text: "03  Reward Shaping 설계 (Safety-Aware)",                      indent: 0 },
+    { text: "04  소스코드 비교 — Baseline vs Proposed",                    indent: 0 },
+    { text: "05  알고리즘 및 하이퍼파라미터",                              indent: 0 },
+    { text: "06  실험 셋업",                                               indent: 0 },
+    { text: "07  실험 결과 ① — 학습 곡선 · 방전 횟수",                   indent: 0 },
+    { text: "08  실험 결과 ② — 최종 성능 비교 테이블",                   indent: 0 },
+    { text: "09  실험 조건 최적화 과정 ① — Step 0→5 타임라인",           indent: 0 },
+    { text: "10  실험 조건 최적화 과정 ② — 핵심 실패 원인 분석",         indent: 0 },
+    { text: "11  실험 조건 최적화 과정 ③ — Step 5 수렴 증거",            indent: 0 },
+    { text: "12  토의 — Safe RL 관점 해석",                               indent: 0 },
+    { text: "13  결론 및 향후 연구",                                       indent: 0 },
   ];
 
-  items.forEach((txt, i) => {
-    slide.addText(txt, {
-      x: 1.0, y: 1.25 + i * 0.5, w: 8.2, h: 0.44,
-      fontSize: 13, fontFace: "Malgun Gothic",
+  items.forEach(({ text, indent }, i) => {
+    slide.addText(text, {
+      x: 1.0 + indent, y: 1.1 + i * 0.42, w: 8.2, h: 0.38,
+      fontSize: 12, fontFace: "Malgun Gothic",
       color: i % 2 === 0 ? C.black : C.lgGray,
     });
   });
@@ -261,8 +263,7 @@ function slide05_reward(pptx) {
     [{ text: "항목",        options:{bold:true} }, { text: "조건",                           options:{bold:true} }, { text: "보상값",       options:{bold:true} }],
     [{ text: "R_step"     }, { text: "매 이동 스텝"                          }, { text: "−1"          }],
     [{ text: "R_goal"     }, { text: "목표 지점 도달"                        }, { text: "+100"        }],
-    [{ text: "R_battery ★"}, { text: "배터리 < 40% + 충전소 도달"           }, { text: "+50"         }],
-    [{ text: ""           }, { text: "배터리 ≥ 40% + 충전소 도달 (시간 낭비)"}, { text: "−10"         }],
+    [{ text: "R_battery ★"}, { text: "배터리 < 40% + 충전소 도달 (긴급 충전)"}, { text: "+50"         }],
     [{ text: ""           }, { text: "배터리 = 0% (방전) — 대형 사고"       }, { text: "−200 + 종료" }],
   ], {
     x: 0.5, y: 1.65, w: 9.0, colW: [1.8, 4.8, 2.4],
@@ -270,6 +271,17 @@ function slide05_reward(pptx) {
     border: { pt: 1, color: C.lineGray },
     fill: { color: C.gray },
   });
+
+  // R_CHARGE_WASTE 설계 변경 노트
+  slide.addShape(pptx.ShapeType.rect, {
+    x: 0.5, y: 3.65, w: 9.0, h: 0.45,
+    fill: { color: "FFF3CD" }, line: { color: "E6B800" },
+  });
+  slide.addText(
+    "⚠  R_CHARGE_WASTE(-10) 초기 설계 → Step 3 실험에서 학습 초기 충전소 회피 행동 유발 확인 → 제거 (results/modify.md 참조)",
+    { x: 0.5, y: 3.67, w: 9.0, h: 0.41,
+      fontSize: 10, color: "7A5000", fontFace: "Malgun Gothic", valign: "middle" }
+  );
 
   // Baseline vs Proposed
   slide.addText("Baseline vs Proposed (Safe RL)", {
@@ -339,20 +351,20 @@ function slide06_code(pptx) {
     "def step(self, action):",
     "  # 이동",
     "  self._move(action)",
-    "  # 배터리 소모",
-    "  self.battery -= 1",
+    "  # 배터리 소모 (DRAIN=3)",
+    "  self.battery -= 3",
     "  reward = R_STEP  # -1",
     "",
-    "  # ★ 충전소 Reward Shaping",
+    "  # ★ 충전소 Safety Reward",
     "  if pos in charging_stations:",
     "    if battery < 40:  # 긴급 충전",
     "      reward += R_CHARGE_LOW  # +50",
-    "    else:  # 시간 낭비",
-    "      reward += R_CHARGE_WASTE  # -10",
+    "    # R_CHARGE_WASTE 제거 (Step4)",
+    "    # → 충전 회피 행동 유발 방지",
     "    self.battery = 100  # 완충",
     "",
     "  # ★ 방전 패널티 (-200)",
-    "  if self.battery == 0:",
+    "  if self.battery <= 0:",
     "    reward += R_DEAD  # -200",
     "    terminated = True",
   ].join("\n");
@@ -597,99 +609,303 @@ function slide10_results2(pptx) {
 }
 
 // =============================================================================
-// 슬라이드 11 — 실험 조건 최적화 과정 (수정 이력)
+// 슬라이드 11a — 실험 조건 최적화 ① 타임라인 개요
 // =============================================================================
 
-function slide11_modify(pptx) {
+function slide11a_modify_overview(pptx) {
   const slide = pptx.addSlide();
-  addHeader(slide, pptx, "09  실험 조건 최적화 과정 — 의미 있는 결과를 위한 반복 수정");
+  addHeader(slide, pptx, "09  실험 조건 최적화 과정 ① — Step 0→5 타임라인");
 
-  // 타임라인 흐름 표
-  slide.addTable([
-    [
-      { text: "단계",          options: { bold: true, fill: { color: C.black  }, color: C.white } },
-      { text: "핵심 변경",     options: { bold: true, fill: { color: C.black  }, color: C.white } },
-      { text: "실제 결과",     options: { bold: true, fill: { color: C.black  }, color: C.white } },
-      { text: "문제 / 결론",   options: { bold: true, fill: { color: C.black  }, color: C.white } },
-    ],
-    [
-      { text: "Step 0\n초기 설계",
-        options: { bold: true, fill: { color: "FFF0F0" } } },
-      { text: "10×10 PyTorch\n매 스텝 학습\n랜덤 시작/목표",
-        options: { fill: { color: "FFF0F0" } } },
-      { text: "⏱ 97분 이상\n실험 완료 불가",
-        options: { bold: true, color: "CC0000", fill: { color: "FFF0F0" } } },
-      { text: "환경이 너무 무거움\n→ 경량화 필수",
-        options: { fill: { color: "FFF0F0" } } },
-    ],
-    [
-      { text: "Step 1\n경량화",
-        options: { bold: true, fill: { color: "FFF8E1" } } },
-      { text: "7×7 NumPy 구현\n4스텝마다 학습\n시작 (3,3) 고정",
-        options: { fill: { color: "FFF8E1" } } },
-      { text: "✅ 55 ep/s\n9분 완료",
-        options: { bold: true, color: "1E8A47", fill: { color: "FFF8E1" } } },
-      { text: "속도 해결\n→ 보상 조건 최적화 필요",
-        options: { fill: { color: "FFF8E1" } } },
-    ],
-    [
-      { text: "Step 2\nDRAIN=1\nWARN=20",
-        options: { bold: true, fill: { color: "FFF0F0" } } },
-      { text: "스텝당 배터리 -1\n(100스텝 지속)\nWARNING 20%",
-        options: { fill: { color: "FFF0F0" } } },
-      { text: "Safety 보상\n발동율 ≈ 0%\n차이 미미",
-        options: { bold: true, color: "CC0000", fill: { color: "FFF0F0" } } },
-      { text: "80스텝 이동 후 발동\n→ 대부분 에피소드가\n먼저 종료",
-        options: { fill: { color: "FFF0F0" } } },
-    ],
-    [
-      { text: "Step 3\nDRAIN=2\nWARN=40\nWASTE=-10",
-        options: { bold: true, fill: { color: "FFF0F0" } } },
-      { text: "스텝당 -2 (50스텝)\nWARNING 40%\n낭비 패널티 -10",
-        options: { fill: { color: "FFF0F0" } } },
-      { text: "Proposed 총방전\n277 > Baseline 265\n역효과!",
-        options: { bold: true, color: "CC0000", fill: { color: "FFF0F0" } } },
-      { text: "WASTE=-10이\nep100~200 구간에서\n충전소 회피 유발",
-        options: { fill: { color: "FFF0F0" } } },
-    ],
-    [
-      { text: "Step 4\nWASTE 제거",
-        options: { bold: true, fill: { color: "FFF0F0" } } },
-      { text: "낭비 패널티 삭제\n(긍정 보상만 유지)",
-        options: { fill: { color: "FFF0F0" } } },
-      { text: "Proposed 총방전\n236 > Baseline 224\n여전히 역전",
-        options: { bold: true, color: "CC0000", fill: { color: "FFF0F0" } } },
-      { text: "DRAIN=2는 목표까지\n충전 없이 도달 가능\n→ Baseline도 수렴",
-        options: { fill: { color: "FFF0F0" } } },
-    ],
-    [
-      { text: "Step 5 ★\nDRAIN=3\nWARN=40",
-        options: { bold: true, fill: { color: "E8F5E9" } } },
-      { text: "스텝당 -3 (33스텝)\n→ 반드시 충전 필요",
-        options: { fill: { color: "E8F5E9" } } },
-      { text: "✅ 총방전 471→415\n말기방전율 70%↓\n평균보상 +148p",
-        options: { bold: true, color: "1E8A47", fill: { color: "E8F5E9" } } },
-      { text: "Baseline은 끝까지\n방전 지속 (2.0/100ep)\nProposed 수렴 ✓",
-        options: { bold: true, fill: { color: "E8F5E9" } } },
-    ],
-  ], {
-    x: 0.2, y: 0.88, w: 9.6,
-    colW: [1.35, 2.1, 2.2, 3.95],
-    fontSize: 9.5, fontFace: "Malgun Gothic",
-    border: { pt: 1, color: C.lineGray },
-    rowH: [0.38, 0.62, 0.62, 0.62, 0.62, 0.62, 0.62],
+  slide.addText("6단계 반복 수정을 통해 Safety Reward가 실질적으로 작동하는 환경 조건을 도출", {
+    x: 0.3, y: 0.85, w: 9.4, h: 0.32,
+    fontSize: 10.5, color: C.lgGray, fontFace: "Malgun Gothic", italic: true,
   });
 
-  // 핵심 교훈 박스
+  slide.addTable([
+    [
+      { text: "단계",        options: { bold: true, fill: { color: C.black }, color: C.white } },
+      { text: "핵심 변경",   options: { bold: true, fill: { color: C.black }, color: C.white } },
+      { text: "결과 요약",   options: { bold: true, fill: { color: C.black }, color: C.white } },
+      { text: "판정",        options: { bold: true, fill: { color: C.black }, color: C.white } },
+      { text: "진행",        options: { bold: true, fill: { color: C.black }, color: C.white } },
+    ],
+    [
+      { text: "Step 0\n초기 설계", options: { bold: true, fill: { color: "FDECEA" } } },
+      { text: "10×10 / PyTorch / 매 스텝 학습 / 랜덤 시작", options: { fill: { color: "FDECEA" } } },
+      { text: "97분 이상 — 실험 완료 불가", options: { color: "CC0000", fill: { color: "FDECEA" } } },
+      { text: "❌ 실패", options: { bold: true, color: "CC0000", fill: { color: "FDECEA" }, align: "center" } },
+      { text: "환경 경량화", options: { fill: { color: "FDECEA" }, align: "center" } },
+    ],
+    [
+      { text: "Step 1\n경량화", options: { bold: true, fill: { color: "FFF8E1" } } },
+      { text: "7×7 / NumPy / 4스텝마다 학습 / 시작 (3,3) 고정", options: { fill: { color: "FFF8E1" } } },
+      { text: "55 ep/s — 9분 완료", options: { color: "1E8A47", fill: { color: "FFF8E1" } } },
+      { text: "✅ 속도 해결", options: { bold: true, color: "1E8A47", fill: { color: "FFF8E1" }, align: "center" } },
+      { text: "보상 설계로", options: { fill: { color: "FFF8E1" }, align: "center" } },
+    ],
+    [
+      { text: "Step 2\nDRAIN=1 / WARN=20", options: { bold: true, fill: { color: "FDECEA" } } },
+      { text: "스텝당 -1 (100스텝 지속) / WARNING 배터리 20%", options: { fill: { color: "FDECEA" } } },
+      { text: "Safety 보상 발동율 ≈ 0% / Proposed -23.1 vs Baseline -70.4", options: { color: "CC0000", fill: { color: "FDECEA" } } },
+      { text: "⚠ 미미", options: { bold: true, color: "CC6600", fill: { color: "FDECEA" }, align: "center" } },
+      { text: "압박 강화", options: { fill: { color: "FDECEA" }, align: "center" } },
+    ],
+    [
+      { text: "Step 3\nDRAIN=2 / WARN=40\nWASTE=−10", options: { bold: true, fill: { color: "FDECEA" } } },
+      { text: "스텝당 -2 (50스텝) / 낭비 패널티 -10 추가", options: { fill: { color: "FDECEA" } } },
+      { text: "Proposed 총방전 277 > Baseline 265 — 역효과!", options: { bold: true, color: "CC0000", fill: { color: "FDECEA" } } },
+      { text: "❌ 역효과", options: { bold: true, color: "CC0000", fill: { color: "FDECEA" }, align: "center" } },
+      { text: "패널티 제거", options: { fill: { color: "FDECEA" }, align: "center" } },
+    ],
+    [
+      { text: "Step 4\nWASTE 제거", options: { bold: true, fill: { color: "FDECEA" } } },
+      { text: "낭비 패널티(-10) 삭제 — 긍정 보상만 유지", options: { fill: { color: "FDECEA" } } },
+      { text: "Proposed 총방전 236 > Baseline 224 — 여전히 역전", options: { bold: true, color: "CC0000", fill: { color: "FDECEA" } } },
+      { text: "❌ 미해결", options: { bold: true, color: "CC0000", fill: { color: "FDECEA" }, align: "center" } },
+      { text: "압박 최대화", options: { fill: { color: "FDECEA" }, align: "center" } },
+    ],
+    [
+      { text: "Step 5 ★\nDRAIN=3 / WARN=40", options: { bold: true, fill: { color: "E8F5E9" } } },
+      { text: "스텝당 -3 (33스텝) — 반드시 충전 필요한 환경", options: { fill: { color: "E8F5E9" } } },
+      { text: "총방전 471→415 / 말기방전율 70%↓ / 평균보상 +148p", options: { bold: true, color: "1E8A47", fill: { color: "E8F5E9" } } },
+      { text: "✅ 최종 채택", options: { bold: true, color: "1E8A47", fill: { color: "E8F5E9" }, align: "center" } },
+      { text: "—", options: { fill: { color: "E8F5E9" }, align: "center" } },
+    ],
+  ], {
+    x: 0.2, y: 1.2, w: 9.6,
+    colW: [1.6, 2.7, 2.85, 1.1, 1.35],
+    fontSize: 9.5, fontFace: "Malgun Gothic",
+    border: { pt: 1, color: C.lineGray },
+    rowH: [0.35, 0.6, 0.6, 0.6, 0.65, 0.6, 0.6],
+  });
+
   slide.addShape(pptx.ShapeType.rect, {
-    x: 0.2, y: 6.28, w: 9.6, h: 0.62,
+    x: 0.2, y: 6.3, w: 9.6, h: 0.55,
     fill: { color: C.black }, line: { color: C.black },
   });
   slide.addText(
-    "핵심 교훈:  배터리가 생존의 병목이 될 때(DRAIN=3) Safety Reward의 차별적 가치가 드러난다.\n" +
-    "Reward 설계는 환경 난이도와 함께 조율해야 한다 — 너무 쉬운 환경에서는 Safety 신호가 불필요해진다.",
-    { x: 0.2, y: 6.3, w: 9.6, h: 0.58,
-      fontSize: 9.5, color: C.white, fontFace: "Malgun Gothic",
+    "핵심 교훈: 배터리가 생존의 병목이 될 때(DRAIN=3) Safety Reward의 차별적 가치가 드러난다." +
+    "  →  다음 슬라이드에서 실패 원인과 수렴 증거를 상세 분석",
+    { x: 0.2, y: 6.32, w: 9.6, h: 0.51,
+      fontSize: 10, bold: true, color: C.white,
+      fontFace: "Malgun Gothic", valign: "middle", align: "center" }
+  );
+}
+
+// =============================================================================
+// 슬라이드 11b — 실험 조건 최적화 ② 핵심 실패 원인 분석
+// =============================================================================
+
+function slide11b_modify_failure(pptx) {
+  const slide = pptx.addSlide();
+  addHeader(slide, pptx, "10  실험 조건 최적화 과정 ② — 핵심 실패 원인 분석");
+
+  // ─── 실패 원인 1: Step 2 ───────────────────────────────────────────────────
+  slide.addShape(pptx.ShapeType.rect, {
+    x: 0.2, y: 0.88, w: 9.6, h: 0.35,
+    fill: { color: "FDECEA" }, line: { color: "CC0000" },
+  });
+  slide.addText("원인 ① Step 2 — Safety 보상이 에피소드 내에서 거의 발동하지 않음 (DRAIN=1, WARNING=20)", {
+    x: 0.2, y: 0.9, w: 9.6, h: 0.31,
+    fontSize: 11, bold: true, color: "CC0000", fontFace: "Malgun Gothic",
+  });
+
+  slide.addTable([
+    [
+      { text: "항목", options: { bold: true, fill: { color: C.black }, color: C.white } },
+      { text: "수치 / 분석", options: { bold: true, fill: { color: C.black }, color: C.white } },
+    ],
+    [{ text: "배터리 WARNING 도달 조건" }, { text: "100 → 20 : 80스텝 이동 필요 (DRAIN=1)" }],
+    [{ text: "7×7 최적 경로 길이" },       { text: "4~12스텝 → 대부분 에피소드가 목표 도달 또는 Max Step(150)으로 종료" }],
+    [{ text: "Safety 보상 실제 발동율" },   { text: "에피소드의 ~0% — 사실상 Proposed ≈ Baseline (reward 차이 미미)" }],
+    [{ text: "Baseline 평균 보상 (말기)" }, { text: "-70.4" }],
+    [{ text: "Proposed 평균 보상 (말기)" }, { text: "-23.1  (차이는 있으나 방전 횟수 개선 불충분)" }],
+  ], {
+    x: 0.2, y: 1.27, w: 9.6, colW: [3.2, 6.4],
+    fontSize: 10.5, fontFace: "Malgun Gothic",
+    border: { pt: 1, color: C.lineGray }, fill: { color: C.gray },
+    rowH: [0.32, 0.38, 0.48, 0.38, 0.32, 0.32],
+  });
+
+  // ─── 실패 원인 2: Step 3 ───────────────────────────────────────────────────
+  slide.addShape(pptx.ShapeType.rect, {
+    x: 0.2, y: 3.2, w: 9.6, h: 0.35,
+    fill: { color: "FDECEA" }, line: { color: "CC0000" },
+  });
+  slide.addText("원인 ② Step 3 — R_CHARGE_WASTE(-10)가 학습 초기 충전소 회피 행동을 역유발", {
+    x: 0.2, y: 3.22, w: 9.6, h: 0.31,
+    fontSize: 11, bold: true, color: "CC0000", fontFace: "Malgun Gothic",
+  });
+
+  slide.addTable([
+    [
+      { text: "구간 (ep)", options: { bold: true, fill: { color: C.black }, color: C.white } },
+      { text: "Baseline 방전 횟수",  options: { bold: true, fill: { color: "CC3300" }, color: C.white } },
+      { text: "Proposed 방전 횟수",  options: { bold: true, fill: { color: "005BAC" }, color: C.white } },
+      { text: "판정 / 원인",         options: { bold: true, fill: { color: C.black  }, color: C.white } },
+    ],
+    [{ text: "ep 1~100 (탐색기)" }, { text: "39.2회" }, { text: "39.4회" }, { text: "≈ 동일 — epsilon ≈ 1.0, 완전 랜덤" }],
+    [
+      { text: "ep 101~200 (반학습, ε≈0.7)", options: { bold: true } },
+      { text: "4.4회",  options: { color: "1E8A47" } },
+      { text: "10.6회", options: { bold: true, color: "CC0000" } },
+      { text: "Proposed 2.4× 나쁨! — WASTE=-10 먼저 학습 → 충전소 회피 행동 강화" },
+    ],
+    [{ text: "ep 200~ (수렴 후)" }, { text: "1~2회/100ep" }, { text: "0~1회/100ep" }, { text: "뒤늦게 역전 — 그러나 초반 손실 누적" }],
+    [{ text: "5 seed 총계" }, { text: "265회" }, { text: "277회 ← Proposed 더 많음" }, { text: "❌ 전체 합산에서 역효과 확정" }],
+  ], {
+    x: 0.2, y: 3.59, w: 9.6, colW: [2.6, 1.8, 1.8, 3.4],
+    fontSize: 10.5, fontFace: "Malgun Gothic",
+    border: { pt: 1, color: C.lineGray }, fill: { color: C.gray },
+    rowH: [0.33, 0.38, 0.52, 0.38, 0.38],
+  });
+
+  // ─── 실패 원인 3: Step 4 ───────────────────────────────────────────────────
+  slide.addShape(pptx.ShapeType.rect, {
+    x: 0.2, y: 5.65, w: 9.6, h: 0.35,
+    fill: { color: "FFF3CD" }, line: { color: "E6B800" },
+  });
+  slide.addText("원인 ③ Step 4 — DRAIN=2는 충전 없이도 목표 도달 가능 → Baseline도 스스로 수렴", {
+    x: 0.2, y: 5.67, w: 9.6, h: 0.31,
+    fontSize: 11, bold: true, color: "7A5000", fontFace: "Malgun Gothic",
+  });
+
+  slide.addTable([
+    [
+      { text: "분석 항목", options: { bold: true, fill: { color: C.black }, color: C.white } },
+      { text: "내용",      options: { bold: true, fill: { color: C.black }, color: C.white } },
+    ],
+    [
+      { text: "DRAIN=2 배터리 지속 시간" },
+      { text: "100 ÷ 2 = 50스텝 지속 — 7×7 최적 경로(4~12스텝)의 4~12배" },
+    ],
+    [
+      { text: "Baseline의 자가 학습 능력" },
+      { text: "-200 방전 패널티만으로도 「충전 없이 빠르게 목표」 전략 수렴 가능 → Safety 보상의 추가 가치 소멸" },
+    ],
+    [
+      { text: "결론" },
+      { text: "Safety Reward가 의미를 갖으려면 배터리가 실제 병목이어야 한다 → DRAIN=3 (33스텝)으로 압박 극대화" },
+    ],
+  ], {
+    x: 0.2, y: 6.04, w: 9.6, colW: [2.8, 6.8],
+    fontSize: 10.5, fontFace: "Malgun Gothic",
+    border: { pt: 1, color: C.lineGray }, fill: { color: "FEFDE7" },
+    rowH: [0.32, 0.38, 0.42, 0.38],
+  });
+}
+
+// =============================================================================
+// 슬라이드 11c — 실험 조건 최적화 ③ Step 5 수렴 증거
+// =============================================================================
+
+function slide11c_modify_convergence(pptx) {
+  const slide = pptx.addSlide();
+  addHeader(slide, pptx, "11  실험 조건 최적화 과정 ③ — Step 5 수렴 증거 (DRAIN=3)");
+
+  slide.addText("에포크 구간별 방전 횟수 분석 — Baseline 미수렴 vs Proposed 완전 수렴", {
+    x: 0.3, y: 0.85, w: 9.4, h: 0.32,
+    fontSize: 11, bold: true, color: C.accent, fontFace: "Malgun Gothic",
+  });
+
+  slide.addTable([
+    [
+      { text: "에포크 구간",       options: { bold: true, fill: { color: C.black }, color: C.white } },
+      { text: "Baseline 방전 횟수", options: { bold: true, fill: { color: "CC3300" }, color: C.white } },
+      { text: "Proposed 방전 횟수", options: { bold: true, fill: { color: "005BAC" }, color: C.white } },
+      { text: "판정",               options: { bold: true, fill: { color: C.black }, color: C.white } },
+      { text: "해석",               options: { bold: true, fill: { color: C.black }, color: C.white } },
+    ],
+    [
+      { text: "ep 1~100\n(완전 탐색기)" },
+      { text: "52.0회" },
+      { text: "48.8회" },
+      { text: "≈ 동일", options: { color: C.lgGray } },
+      { text: "epsilon=1.0, 완전 랜덤 행동 — 차이 없음" },
+    ],
+    [
+      { text: "ep 101~200\n(초기 학습)" },
+      { text: "20.6회" },
+      { text: "19.4회" },
+      { text: "≈ 동일", options: { color: C.lgGray } },
+      { text: "Safety 신호 학습 시작 — 아직 차이 미미" },
+    ],
+    [
+      { text: "ep 201~300\n(중기 학습)" },
+      { text: "6.8회",  options: { color: "1E8A47" } },
+      { text: "10.0회", options: { color: "CC0000" } },
+      { text: "Baseline 우세", options: { bold: true, color: "CC6600" } },
+      { text: "Baseline이 단순 회피 전략 먼저 수렴 — 일시적 역전" },
+    ],
+    [
+      { text: "ep 301~500\n(역전 구간)" },
+      { text: "4.6회" },
+      { text: "1.0회", options: { bold: true, color: "005BAC" } },
+      { text: "★ Proposed 역전", options: { bold: true, color: "1E8A47" } },
+      { text: "Safety Reward 내재화 완료 → 충전 전략 선제적 실행" },
+    ],
+    [
+      { text: "ep 501~700\n(수렴 완성)" },
+      { text: "3.2회" },
+      { text: "0.2회", options: { bold: true, color: "005BAC" } },
+      { text: "Proposed 압도", options: { bold: true, color: "1E8A47" } },
+      { text: "Baseline: 여전히 사후 대응 / Proposed: 예방적 충전 완성" },
+    ],
+    [
+      { text: "ep 700~1500\n(후반 안정기)" },
+      { text: "4.6회 / 800ep", options: { bold: true, color: "CC0000" } },
+      { text: "1.6회 / 800ep",  options: { bold: true, color: "005BAC" } },
+      { text: "격차 유지", options: { bold: true, color: "1E8A47" } },
+      { text: "Baseline 미수렴(방전 지속) vs Proposed 안정적 유지" },
+    ],
+    [
+      { text: "5 seed 총계", options: { bold: true, fill: { color: "F5F5F5" } } },
+      { text: "471회", options: { bold: true, color: "CC0000", fill: { color: "F5F5F5" } } },
+      { text: "415회", options: { bold: true, color: "005BAC", fill: { color: "F5F5F5" } } },
+      { text: "56회 감소", options: { bold: true, color: "1E8A47", fill: { color: "F5F5F5" } } },
+      { text: "말기 방전율: 2.0 → 0.6 (70% 개선)", options: { bold: true, fill: { color: "F5F5F5" } } },
+    ],
+  ], {
+    x: 0.2, y: 1.22, w: 9.6,
+    colW: [1.75, 1.55, 1.6, 1.7, 2.95],
+    fontSize: 10, fontFace: "Malgun Gothic",
+    border: { pt: 1, color: C.lineGray }, fill: { color: C.gray },
+    rowH: [0.38, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.45],
+  });
+
+  // 최종 파라미터 요약
+  slide.addShape(pptx.ShapeType.rect, {
+    x: 0.2, y: 5.85, w: 9.6, h: 0.32,
+    fill: { color: C.accent }, line: { color: C.accent },
+  });
+  slide.addText("최종 채택 파라미터", {
+    x: 0.2, y: 5.87, w: 9.6, h: 0.28,
+    fontSize: 11, bold: true, color: C.white, fontFace: "Malgun Gothic",
+  });
+  slide.addTable([
+    [
+      { text: "DRAIN_PER_STEP = 3", options: { bold: true } },
+      { text: "WARNING_THRESHOLD = 40", options: { bold: true } },
+      { text: "R_CHARGE_LOW = +50", options: { bold: true } },
+      { text: "R_CHARGE_WASTE = 제거", options: { bold: true } },
+      { text: "R_DEAD = −200", options: { bold: true } },
+    ],
+  ], {
+    x: 0.2, y: 6.21, w: 9.6, colW: [1.9, 2.15, 1.9, 1.95, 1.7],
+    fontSize: 11, fontFace: "Malgun Gothic",
+    border: { pt: 1, color: C.lineGray }, fill: { color: "EAF4FF" },
+    rowH: [0.42],
+  });
+
+  slide.addShape(pptx.ShapeType.rect, {
+    x: 0.2, y: 6.67, w: 9.6, h: 0.55,
+    fill: { color: C.black }, line: { color: C.black },
+  });
+  slide.addText(
+    "Baseline은 ep 1,500까지 방전이 사라지지 않음 (미수렴 상태 유지).\n" +
+    "Proposed는 ep 500 이후 방전율이 거의 0으로 수렴 — Safety 정책이 완전히 내재화됨을 실험으로 증명.",
+    { x: 0.2, y: 6.69, w: 9.6, h: 0.51,
+      fontSize: 10, color: C.white, fontFace: "Malgun Gothic",
       valign: "middle", align: "center" }
   );
 }
@@ -700,7 +916,7 @@ function slide11_modify(pptx) {
 
 function slide12_discussion(pptx) {
   const slide = pptx.addSlide();
-  addHeader(slide, pptx, "10  토의 — Safe RL 관점 해석");
+  addHeader(slide, pptx, "12  토의 — Safe RL 관점 해석");
 
   const sections = [
     { title: "① Safe RL 관점 해석", color: C.accent,
@@ -731,7 +947,7 @@ function slide12_discussion(pptx) {
 
 function slide13_conclusion(pptx) {
   const slide = pptx.addSlide();
-  addHeader(slide, pptx, "11  결론 및 향후 연구");
+  addHeader(slide, pptx, "13  결론 및 향후 연구");
 
   // 핵심 메시지 박스
   slide.addShape(pptx.ShapeType.rect, {
@@ -792,23 +1008,25 @@ async function main() {
   pptx.subject = "Safety-Aware Reward Shaping 기반 AGV 배터리 충전 스케줄링 강화학습";
 
   // 슬라이드 순서대로 생성
-  slide01_title(pptx);       // 01. 표지
-  slide02_toc(pptx);         // 02. 목차
-  slide03_overview(pptx);    // 03. 프로젝트 목표
-  slide04_env(pptx);         // 04. 환경 설명
-  slide05_reward(pptx);      // 05. Reward Shaping
-  slide06_code(pptx);        // 06. 소스코드 비교 (★ 신규)
-  slide07_algo(pptx);        // 07. 알고리즘/하이퍼파라미터
-  slide08_setup(pptx);       // 08. 실험 셋업
-  slide09_results1(pptx);    // 09. 결과① 학습 곡선
-  slide10_results2(pptx);    // 10. 결과② 비교 테이블
-  slide11_modify(pptx);      // 11. 실험 조건 최적화 과정 (★ 신규)
-  slide12_discussion(pptx);  // 12. 토의
-  slide13_conclusion(pptx);  // 13. 결론
+  slide01_title(pptx);            // 01. 표지
+  slide02_toc(pptx);              // 02. 목차
+  slide03_overview(pptx);         // 03. 프로젝트 목표
+  slide04_env(pptx);              // 04. 환경 설명
+  slide05_reward(pptx);           // 05. Reward Shaping (R_CHARGE_WASTE 제거 반영)
+  slide06_code(pptx);             // 06. 소스코드 비교
+  slide07_algo(pptx);             // 07. 알고리즘/하이퍼파라미터
+  slide08_setup(pptx);            // 08. 실험 셋업
+  slide09_results1(pptx);         // 09. 결과① 학습 곡선
+  slide10_results2(pptx);         // 10. 결과② 비교 테이블
+  slide11a_modify_overview(pptx); // 11. 최적화 과정 ① 타임라인
+  slide11b_modify_failure(pptx);  // 12. 최적화 과정 ② 실패 원인 분석
+  slide11c_modify_convergence(pptx); // 13. 최적화 과정 ③ 수렴 증거
+  slide12_discussion(pptx);       // 14. 토의
+  slide13_conclusion(pptx);       // 15. 결론
 
   // 저장
   await pptx.writeFile({ fileName: OUT_PATH });
-  console.log(`\nPPT 저장 완료 (13슬라이드): ${OUT_PATH}`);
+  console.log(`\nPPT 저장 완료 (15슬라이드): ${OUT_PATH}`);
 }
 
 main().catch(err => {
