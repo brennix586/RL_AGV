@@ -33,9 +33,10 @@
 |------|------|
 | 매 이동 스텝 | -1 |
 | 목표 지점 도달 | +100 |
-| 배터리 < 40% + 충전소 도달 | +50 |
-| 배터리 충분 + 충전소 도달 | -10 |
+| 배터리 < 40% + 충전소 도달 | **+50** |
 | 배터리 = 0% (방전) | **-200** + 에피소드 종료 |
+
+> `R_CHARGE_WASTE` (충전 낭비 패널티 -10)는 학습 초기 충전소 회피 행동을 유발하여 제거. 안전 행동에는 보상만 부여하는 단방향 설계 채택.
 
 ---
 
@@ -113,13 +114,25 @@ RL_AGV/
 │   ├── env/agv_warehouse_env.py     # Custom Gymnasium 환경 (7×7, Safety-Aware)
 │   ├── agent/dqn_agent.py           # DQN 에이전트 (NumPy 순수 구현)
 │   ├── train/train.py               # 학습 실행 (argparse, tqdm, CSV, 체크포인트)
-│   └── report/make_report.js        # PPT 보고서 생성 (12슬라이드)
+│   └── report/
+│       ├── make_report.js           # PPT 보고서 생성 (12슬라이드)
+│       ├── package.json
+│       └── node_modules/            # (.gitignore 제외)
 ├── results/
-│   ├── logs/{baseline,proposed}/    # CSV 로그 (시드별)
-│   ├── images/                      # 학습 곡선 그래프
-│   ├── checkpoints/{mode}/seed{N}/  # 체크포인트 (시드별 완전 분리)
+│   ├── logs/
+│   │   ├── baseline/                # CSV 로그 (seed별 5개)
+│   │   └── proposed/                # CSV 로그 (seed별 5개)
+│   ├── images/
+│   │   └── training_curves.png      # 학습 곡선 비교 그래프
+│   ├── checkpoints/
+│   │   ├── baseline/seed{N}/        # best_model.pkl + checkpoint_ep{N}.pkl
+│   │   └── proposed/seed{N}/        # (.gitignore 제외, Releases로 배포)
+│   ├── modify.md                    # 실험 조건 수정 이력 (Step 0~5)
 │   └── AGV_Report.pptx              # 생성된 PPT 보고서
 ├── prompts/
+│   ├── prompts.md                   # 작업 프롬프트 기록
+│   ├── rules.md                     # 프로젝트 규칙 / 컨벤션
+│   └── skills.md                    # 활용 기술 정리
 ├── docs/requirement.md
 ├── .gitignore
 └── README.md
@@ -127,17 +140,21 @@ RL_AGV/
 
 ---
 
-## 실험 설계
+## 실험 설계 및 결과
 
 - **5개 랜덤 시드** `[0, 1, 42, 123, 777]` × 1,500 에피소드
+- 최종 채택 조건: `DRAIN_PER_STEP=3`, `WARNING_THRESHOLD=40` (Step 0~5 수정 이력 → `results/modify.md`)
 - 평균 ± 표준편차로 신뢰구간 시각화
 
-| 평가 지표 | 기대 결과 |
-|----------|-----------|
-| 평균 에피소드 보상 | Proposed > Baseline |
-| 방전 횟수 (★ 핵심) | Baseline 빈번 / **Proposed = 0** |
-| 에피소드당 작업 완료 | Proposed 우위 |
-| 학습 수렴 속도 | Proposed 빠름 (풍부한 경험) |
+| 평가 지표 | Baseline | Proposed | 개선 |
+|----------|----------|----------|------|
+| 평균 보상 (최종 200ep) | -20.5 ± 106.7 | **+127.3 ± 47.5** | +147.8p |
+| 표준편차 | 106.7 | **47.5** | 55% 감소 |
+| 총 방전 횟수 (5 seed 합산) | 471회 | **415회** | 56회 감소 |
+| 말기 방전율 (/100ep) | 2.0 | **0.6** | **70% 감소** |
+
+> 학습 후반부(ep 500~)에서 Proposed의 방전이 거의 0으로 수렴하며 Safety 정책을 내재화.
+> 전체 수렴 과정 및 구간별 분석은 `results/modify.md` 참조.
 
 ---
 

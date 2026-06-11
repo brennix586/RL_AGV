@@ -10,13 +10,15 @@ RL_AGV/
 │   ├── env/          # Gymnasium 환경 클래스
 │   ├── agent/        # RL 에이전트
 │   ├── train/        # 학습 실행 진입점
-│   └── report/       # 보고서 생성 스크립트
+│   └── report/       # 보고서 생성 스크립트 (Node.js)
 ├── results/
-│   ├── checkpoints/{mode}/seed{N}/   # 모델 저장 (시드별 분리)
-│   ├── logs/{mode}/                  # CSV 학습 로그
-│   └── images/                       # 학습 곡선 이미지
+│   ├── checkpoints/{mode}/seed{N}/   # 모델 저장 (시드별 분리, .gitignore 제외)
+│   ├── logs/{baseline,proposed}/     # CSV 학습 로그 (seed별 5개)
+│   ├── images/                       # 학습 곡선 이미지
+│   ├── modify.md                     # 실험 조건 수정 이력
+│   └── AGV_Report.pptx               # 생성된 PPT 보고서
 ├── docs/             # 요구사항 문서
-└── prompts/          # Claude 프롬프트 및 규칙 기록
+└── prompts/          # 작업 프롬프트 및 규칙 기록
 ```
 
 ---
@@ -52,14 +54,16 @@ RL_AGV/
 
 ## 환경 설정 고정값
 
-| 항목 | 값 |
-|------|----|
-| 맵 크기 | 7 × 7 |
-| 출발지 | (3, 3) |
-| 충전소 | (0,0), (6,6) |
-| 초기 배터리 | 100 |
-| 스텝당 소모 | -3 |
-| Max Step | 150 |
-| Replay Buffer | 10,000 |
-| Target Network 갱신 | 10 스텝 |
-| Epsilon 범위 | 1.0 → 0.01 (decay 0.995) |
+| 항목 | 값 | 비고 |
+|------|----|------|
+| 맵 크기 | 7 × 7 | Step 1에서 10×10 → 축소 |
+| 출발지 | (3, 3) | Step 1에서 랜덤 → 고정 |
+| 충전소 | (0,0), (6,6) | |
+| 초기 배터리 | 100 | |
+| 스텝당 소모 | **-3** | Step 5 최종 (1→2→3 단계적 조정) |
+| WARNING_THRESHOLD | **40** | Step 3 이후 고정 |
+| R_CHARGE_WASTE | **제거** | Step 4에서 충전 회피 유발로 삭제 |
+| Max Step | 150 | |
+| Replay Buffer | 10,000 | |
+| Target Network 갱신 | 10 스텝 | |
+| Epsilon 범위 | 1.0 → 0.01 (decay 0.995) | |
