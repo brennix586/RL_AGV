@@ -50,6 +50,31 @@
 
 ---
 
+## 사전 학습 모델 다운로드
+
+[![Download Models](https://img.shields.io/badge/Download-Pretrained%20Models-blue?style=for-the-badge&logo=github)](https://github.com/brennix586/RL_AGV/releases/download/v1.0.0/model_release_v1.0.0.zip)
+
+| 파일 | 설명 | 크기 |
+|------|------|------|
+| `model_release_v1.0.0.zip` | Baseline + Proposed best model (5 seed 각각) | ~2.8 MB |
+
+**모델 파일 구조 (zip 내부)**
+```
+baseline_seed{N}_best_model.pkl   # Baseline DQN 최적 모델
+proposed_seed{N}_best_model.pkl   # Proposed DQN 최적 모델
+```
+
+**학습된 모델로 추론/재학습**
+```bash
+# 학습된 모델 불러와서 이어서 학습
+python -m src.train.train --mode proposed --seed 42 --resume results/checkpoints/proposed/seed42/best_model.pkl
+```
+
+> 모델은 NumPy 배열(가중치) + 하이퍼파라미터를 `pickle`로 저장한 파일입니다.
+> Python 3.10+ / numpy 필요.
+
+---
+
 ## 실행 방법
 
 ```bash
