@@ -46,6 +46,9 @@ Thumbs.db
 .env
 *.env
 
+# Claude Code
+.claude/
+
 # Node
 node_modules/
 npm-debug.log*
