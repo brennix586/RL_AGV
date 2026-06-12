@@ -3,7 +3,7 @@
 **Deep Q-Network를 활용한 Safe RL 구현** | 김한얼 (A74030)
 
 기존 강화학습은 최단 경로만 학습하여 배터리 방전이라는 안전사고를 유발한다.
-본 프로젝트는 **Safety-Aware Reward Shaping**으로 방전율 0%를 달성하면서 물류 처리량을 최적화한다.
+본 프로젝트는 **Safety-Aware Reward Shaping**으로 방전율을 70% 감소시키면서 물류 처리량을 최적화한다.
 
 ---
 
@@ -53,25 +53,36 @@
 
 ## 사전 학습 모델 다운로드
 
-[![Download Models](https://img.shields.io/badge/Download-Pretrained%20Models-blue?style=for-the-badge&logo=github)](https://github.com/brennix586/RL_AGV/releases/download/v1.0.0/model_release_v1.0.0.zip)
+[![Download Models](https://img.shields.io/badge/Download-Pretrained%20Models%20v1.1.0-blue?style=for-the-badge&logo=github)](https://github.com/brennix586/RL_AGV/raw/main/results/model_release_v1.1.0.zip)
 
 | 파일 | 설명 | 크기 |
 |------|------|------|
-| `model_release_v1.0.0.zip` | Baseline + Proposed best model (5 seed 각각) | ~2.8 MB |
+| `model_release_v1.1.0.zip` | Baseline + Proposed best model (5 seed 각각) | 2.84 MB |
 
 **모델 파일 구조 (zip 내부)**
 ```
-baseline_seed{N}_best_model.pkl   # Baseline DQN 최적 모델
-proposed_seed{N}_best_model.pkl   # Proposed DQN 최적 모델
+baseline_seed0_best_model.pkl
+baseline_seed1_best_model.pkl
+baseline_seed42_best_model.pkl
+baseline_seed123_best_model.pkl
+baseline_seed777_best_model.pkl
+proposed_seed0_best_model.pkl
+proposed_seed1_best_model.pkl
+proposed_seed42_best_model.pkl
+proposed_seed123_best_model.pkl
+proposed_seed777_best_model.pkl
 ```
 
 **학습된 모델로 추론/재학습**
 ```bash
+# zip 압축 해제 후 체크포인트 폴더에 배치
+# 예: results/checkpoints/proposed/seed42/best_model.pkl
+
 # 학습된 모델 불러와서 이어서 학습
 python -m src.train.train --mode proposed --seed 42 --resume results/checkpoints/proposed/seed42/best_model.pkl
 ```
 
-> 모델은 NumPy 배열(가중치) + 하이퍼파라미터를 `pickle`로 저장한 파일입니다.
+> 모델은 NumPy 배열(가중치) + Adam 옵티마이저 상태를 `pickle`로 저장한 파일입니다.
 > Python 3.10+ / numpy 필요.
 
 ---
@@ -126,13 +137,14 @@ RL_AGV/
 │   │   └── training_curves.png      # 학습 곡선 비교 그래프
 │   ├── checkpoints/
 │   │   ├── baseline/seed{N}/        # best_model.pkl + checkpoint_ep{N}.pkl
-│   │   └── proposed/seed{N}/        # (.gitignore 제외, Releases로 배포)
+│   │   └── proposed/seed{N}/        # (.gitignore 제외, 아래 zip으로 배포)
+│   ├── model_release_v1.1.0.zip     # ★ 사전 학습 모델 패키지 (10개 best_model)
 │   ├── modify.md                    # 실험 조건 수정 이력 (Step 0~5)
-│   └── AGV_Report.pptx              # 생성된 PPT 보고서
+│   └── 강화학습_RL AGV_김한얼_20260612_v1.1.pdf   # 최종 보고서
 ├── prompts/
-│   ├── prompts.md                   # 작업 프롬프트 기록
-│   ├── rules.md                     # 프로젝트 규칙 / 컨벤션
-│   └── skills.md                    # 활용 기술 정리
+│   ├── prompts.md
+│   ├── rules.md
+│   └── skills.md
 ├── docs/requirement.md
 ├── .gitignore
 └── README.md
