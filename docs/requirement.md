@@ -2,7 +2,7 @@
 
 > **Repository:** https://github.com/brennix586/RL_AGV  
 > **작성일:** 2026.06.  
-> **상태:** 계획 확정 / 구현 대기
+> **상태:** 계획 확정 / 구현 완료
 
 ---
 
@@ -687,9 +687,7 @@ BATTERY_WARNING = 40
 ├── DQN 하이퍼파라미터 확정
 ├── 비교 실험 설계 확정
 ├── PPT 슬라이드 구성 확정
-└── 폴더 구조 확정
-
-🔲 진행 예정
+├── 폴더 구조 확정
 ├── 폴더 구조 생성 (VS Code)
 ├── agv_warehouse_env.py 구현 ← 상세 주석 필수
 ├── dqn_agent.py 구현 ← 상세 주석 필수
